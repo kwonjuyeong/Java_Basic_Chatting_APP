@@ -1,5 +1,7 @@
 package com.example.java_chat_practice;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -13,9 +15,20 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -32,6 +45,15 @@ public class FriendListFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    public ArrayList<FriendInfo> getFriendInfoArrayList() {
+        return friendInfoArrayList;
+    }
+
+    public RecyclerView.Adapter getAdapter() {
+        return adapter;
+    }
+
     private ArrayList<FriendInfo> friendInfoArrayList = new ArrayList<FriendInfo>();
     private RecyclerView.Adapter adapter;
 
@@ -78,8 +100,29 @@ public class FriendListFragment extends Fragment {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.menu_friend_add:
-                friendInfoArrayList.add(new FriendInfo("new friend","new email"));
-                adapter.notifyDataSetChanged();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                View view = View.inflate(getContext(), R.layout.friend_add_dialog_layout, null);
+
+                EditText editTextName = view.findViewById(R.id.editTextTextPersonName);
+                EditText editTextEmail = view.findViewById(R.id.editTextTextEmailAddress);
+
+                builder.setView(view);
+                builder.setTitle("친구 추가");
+                builder.setPositiveButton("추가", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String name = editTextName.getText().toString();
+                        String email = editTextEmail.getText().toString();
+
+                        DatabaseReference userlist = FirebaseDatabase.getInstance().getReference("userlist");
+                        Query query = userlist.orderByChild("email").equalTo(email);
+                        query.addChildEventListener(new MyChildEventListener(FriendListFragment.this));
+
+
+                    }
+                });
+                builder.setNegativeButton("취소", null);
+                builder.show();
                 break;
         }
 
@@ -118,6 +161,25 @@ public class FriendListFragment extends Fragment {
         };
         recyclerView.setAdapter(adapter);
 
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference friendlist = FirebaseDatabase.getInstance().getReference("friendlist");
+        friendlist.child(uid).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                GenericTypeIndicator<List<FriendInfo>> t = new GenericTypeIndicator<List<FriendInfo>>() {};
+                ArrayList<FriendInfo> arrayList = (ArrayList<FriendInfo>) snapshot.getValue(t);
+                friendInfoArrayList = arrayList;
+                adapter.notifyDataSetChanged();
+
+            }
+
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
         return rootView;
     }
 
@@ -142,21 +204,4 @@ public class FriendListFragment extends Fragment {
         }
     }
 
-    private class FriendInfo {
-        private String name;
-        private String email;
-
-        public FriendInfo(String name, String email) {
-            this.name = name;
-            this.email = email;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-    }
 }

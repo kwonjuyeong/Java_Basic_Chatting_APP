@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         if(mAuth.getCurrentUser()==null){
             signIn();
         }
-        updateFriendList(mAuth.getCurrentUser());
+       // updateFriendList(mAuth.getCurrentUser());
     }
 
     private void signIn() {
@@ -173,7 +173,9 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
 
-                            updateFriendList(user);
+                            updateUserInfo(user);
+
+                            //updateFriendList(user);
 
                         } else {
                             // If sign in fails, display a message to the user.
@@ -183,11 +185,23 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    private void updateUserInfo(FirebaseUser user) {
+        if(user == null) return;
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference userlist =  database.getReference("userlist");
+        DatabaseReference userinfo = userlist.child(user.getUid());
+        userinfo.child("uid").setValue(user.getUid());
+        userinfo.child("email").setValue(user.getEmail());
+        userinfo.child("name").setValue(user.getDisplayName());
+    }
+/*
     private void updateFriendList(FirebaseUser user) {
         if(user == null) return;
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference ref_friendlistlist = database.getReference("friendlist").child(user.getUid());
-        ref_friendlistlist.setValue("hello");
+        DatabaseReference friendlist = database.getReference("friendlist").child(user.getUid());
+
     }
+*/
 }
