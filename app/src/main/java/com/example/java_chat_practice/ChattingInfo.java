@@ -11,10 +11,10 @@ public class ChattingInfo {
     public ChattingInfo() {
     }
 
-    public ChattingInfo(String text, String senderUID, String receiverUID) {
+    public ChattingInfo(String text, String senderUID) {
         this.text = text;
         this.senderUID = senderUID;
-        this.receiverUID = receiverUID;
+
     }
 
     public String getSenderUID() {
