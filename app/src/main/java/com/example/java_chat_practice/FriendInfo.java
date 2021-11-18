@@ -5,13 +5,15 @@ import java.io.Serializable;
 class FriendInfo {
     private String name;
     private String email;
+    private String uid;
 
     public FriendInfo() {
     }
 
-    public FriendInfo(String name, String email) {
+    public FriendInfo(String name, String email, String uid) {
         this.name = name;
         this.email = email;
+        this.uid = uid;
     }
 
     public String getName() {
@@ -20,5 +22,9 @@ class FriendInfo {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getUid() {
+        return uid;
     }
 }

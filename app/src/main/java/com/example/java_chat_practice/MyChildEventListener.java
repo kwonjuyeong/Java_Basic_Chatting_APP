@@ -28,7 +28,7 @@ class MyChildEventListener implements ChildEventListener {
 
         Log.d("Datasnapshot", e + ", "+ n +", " + u);
 
-        friendListFragment.getFriendInfoArrayList().add(new FriendInfo(n, e));
+        friendListFragment.getFriendInfoArrayList().add(new FriendInfo(n, e, u));
         friendListFragment.getAdapter().notifyDataSetChanged();
 
         String current_user_uid = FirebaseAuth.getInstance().getCurrentUser().getUid();

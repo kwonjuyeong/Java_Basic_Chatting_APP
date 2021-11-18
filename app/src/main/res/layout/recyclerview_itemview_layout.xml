@@ -48,4 +48,18 @@
         app:layout_constraintBottom_toBottomOf="@+id/textView1"
         app:layout_constraintStart_toStartOf="@+id/textViewName"
         app:layout_constraintTop_toTopOf="@+id/textView1" />
+
+    <ImageButton
+        android:id="@+id/imageButtonChat"
+        android:layout_width="47dp"
+        android:layout_height="45dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:background="#FFFFFF"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewEmail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textViewName"
+        app:srcCompat="@android:drawable/sym_action_chat" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

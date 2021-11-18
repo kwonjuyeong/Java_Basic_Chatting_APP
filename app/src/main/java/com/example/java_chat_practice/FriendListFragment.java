@@ -2,6 +2,7 @@ package com.example.java_chat_practice;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -135,7 +137,7 @@ public class FriendListFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_friend_list, container, false);
 
-        RecyclerView recyclerView = rootView.findViewById(R.id.recyclerView);
+        RecyclerView recyclerView = rootView.findViewById(R.id.recyclerViewFriend);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new RecyclerView.Adapter() {
             @NonNull
@@ -150,8 +152,23 @@ public class FriendListFragment extends Fragment {
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
                 MyViewHolder viewHolder = (MyViewHolder) holder;
 
-                viewHolder.setName(friendInfoArrayList.get(position).getName());
-                viewHolder.setEmail(friendInfoArrayList.get(position).getEmail());
+                FriendInfo info = friendInfoArrayList.get(position);
+
+                viewHolder.setName(info.getName());
+                viewHolder.setEmail(info.getEmail());
+                viewHolder.getImageButtonChat().setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String senderUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                        String receiverUID = info.getUid();
+
+                        Intent intent = new Intent(getContext(), ChattingActivity.class);
+                        intent.putExtra("sender", senderUID);
+                        intent.putExtra("receiver", receiverUID);
+                        startActivity(intent);
+
+                    }
+                });
             }
 
             @Override
@@ -187,12 +204,17 @@ public class FriendListFragment extends Fragment {
 
         private final TextView textViewName;
         private final TextView textViewEmail;
+        private final ImageButton imageButtonChat;
+
+
+
 
         public MyViewHolder(View itemView) {
             super(itemView);
 
             textViewName = itemView.findViewById(R.id.textViewName);
             textViewEmail = itemView.findViewById(R.id.textViewEmail);
+            imageButtonChat = itemView.findViewById(R.id.imageButtonChat);
         }
 
         public void setName(String name) {
@@ -202,6 +224,12 @@ public class FriendListFragment extends Fragment {
         public void setEmail(String email) {
             textViewEmail.setText(email);
         }
+
+        public ImageButton getImageButtonChat() {
+            return imageButtonChat;
+        }
+
+
     }
 
 }
