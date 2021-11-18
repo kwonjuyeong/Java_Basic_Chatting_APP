@@ -9,17 +9,24 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -31,12 +38,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +59,8 @@ public class ChattingActivity extends AppCompatActivity {
     private String receiverUID;
     private RecyclerView.Adapter adapter;
     private String roomName;
+    private ChatViewHolder selectedViewHolder;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +74,9 @@ public class ChattingActivity extends AppCompatActivity {
         RecyclerView recyclerView = findViewById(R.id.recyclerViewChat);
         EditText editTextChat = findViewById(R.id.editTextChat);
         ImageButton imageButtonSend = findViewById(R.id.imageButtonSend);
-        layout = findViewById(R.id.constraintlayoutChatViewHolder);
         ImageButton imageButtonAdd = findViewById(R.id.imageButtonadd);
+        //layout = findViewById(R.id.constraintlayoutChatViewHolder);
+        progressBar = findViewById(R.id.progressBar);
 
         imageButtonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -191,7 +203,7 @@ public class ChattingActivity extends AppCompatActivity {
             Uri uri = data.getData();
             File file = new File(uri.getPath());
 
-            ProgressBar progressBar = findViewById(R.id.progressBar);
+
 
             StorageReference storageReference = FirebaseStorage.getInstance().getReference(roomName).child(file.getName());
             UploadTask uploadTask = storageReference.putFile(uri);
@@ -212,7 +224,7 @@ public class ChattingActivity extends AppCompatActivity {
                 public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                         progressBar.setVisibility(View.GONE);
 
-                        addText2DB(storageReference.getDownloadUrl().toString());
+                        addText2DB(storageReference.getName() );
                 }
             });
 
@@ -234,13 +246,56 @@ public class ChattingActivity extends AppCompatActivity {
         ref_chatlist.child(roomName).child("chat").setValue(chattingInfoArrayList);
     }
 
-    private  class ChatViewHolder extends RecyclerView.ViewHolder {
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        boolean result = super.onContextItemSelected(item);
+        int itemId = item.getItemId();
+
+        switch (itemId) {
+            case R.id.context_menu_download_image:
+                String chattext = selectedViewHolder.getTextView().getText().toString();
+
+                StorageReference file_ref = FirebaseStorage.getInstance().getReference(roomName).child(chattext);
+
+                File tempFile = null;
+                try {
+                    tempFile = File.createTempFile("image", "");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                final File finalTempFile = tempFile;
+                file_ref.getFile(tempFile).addOnCompleteListener(new OnCompleteListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<FileDownloadTask.TaskSnapshot> task) {  Toast.makeText(getApplicationContext(), "file download complete", Toast.LENGTH_SHORT).show();
+                    Bitmap bitmap = BitmapFactory.decodeFile(finalTempFile.getAbsolutePath());
+                    ImageView imageViewChat = selectedViewHolder.getImageViewChat();
+                    imageViewChat.setImageBitmap(bitmap);
+                    imageViewChat.setVisibility(View.VISIBLE);
+
+                    progressBar.setVisibility(View.GONE);
+                    }
+                }).addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(@NonNull FileDownloadTask.TaskSnapshot snapshot) {
+                        progressBar.setVisibility(View.VISIBLE);
+                    }
+                });
+                break;
+        }
+        return result;
+    }
+
+    private  class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
 
         private final TextView textView;
+        private final ImageView imageViewChat;
 
         public ChatViewHolder(View itemView) {
             super(itemView);
             textView = itemView.findViewById(R.id.textViewChatViewHolder);
+            imageViewChat = itemView.findViewById(R.id.imageViewChat);
+
+            textView.setOnCreateContextMenuListener(this);
         }
 
         public void setText(String text) {
@@ -263,6 +318,25 @@ public class ChattingActivity extends AppCompatActivity {
                 //et.connect(R.id.textViewChatViewHolder, ConstraintSet.LEFT, R.id.constraintlayoutChatViewHolder, ConstraintSet
                 //       .LEFT);
             }
+        }
+
+
+        public TextView getTextView() {
+            return textView;
+        }
+
+        public ImageView getImageViewChat() {
+            return imageViewChat;
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+
+            MenuInflater menuInflater = new MenuInflater(getApplicationContext());
+            menuInflater.inflate(R.menu.context_menu_chat, menu);
+
+            selectedViewHolder = this;
+
         }
     }
 
