@@ -1,3 +1,3 @@
-# java_chat
+# Android_Java_Chat
 
-안드로이드 자바 채팅 기능 구현
+간단한 채팅 기능 구현
